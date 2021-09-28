@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="375px" height="67px" viewBox="0 0 375 67" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Path 2</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="98.1327516%" id="linearGradient-1">
+            <stop stop-color="#FFFFFF" stop-opacity="0" offset="0%"></stop>
+            <stop stop-color="#FFFFFF" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Light-Theme" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Customise" transform="translate(0.000000, -460.000000)" fill="url(#linearGradient-1)">
+            <path d="M-2.81943358e-11,459.852842 C23.5847822,500.617614 84.160055,521 181.725819,521 C279.291582,521 343.716309,500.617614 375,459.852842 L375,526.55839 L-2.81943358e-11,526.55839 L-2.81943358e-11,459.852842 Z" id="Path-2"></path>
+        </g>
+    </g>
+</svg>

@@ -1,18 +1,52 @@
 import React, { FC } from "react";
-import { Text as BasicText, StyleSheet } from "react-native";
+import { StyleSheet, Text, TextStyle } from "react-native";
+import {
+	useFonts,
+	Rubik_300Light,
+	Rubik_700Bold,
+} from "@expo-google-fonts/rubik";
 
-export interface TextProps {
+export const FontWeights = {
+	bold: "Rubik_700Bold",
+	light: "Rubik_300Light",
+};
+
+export interface AppTextProps {
+	fontSize?: number;
+	fontFamily?: "Rubik_300Light" | "Rubik_700Bold";
+	color?: string;
+	style?: TextStyle;
 	children: React.ReactNode;
 }
 
-const Text: FC<TextProps> = ({ children }) => {
-	return <BasicText style={styles.textStyle}>{children}</BasicText>;
+const AppText: FC<AppTextProps> = ({
+	fontSize = 16,
+	fontFamily = "Rubik_300Light",
+	color = "#A6A6A6",
+	children,
+	style,
+}) => {
+	let [fontsLoaded] = useFonts({
+		Rubik_300Light,
+		Rubik_700Bold,
+	});
+
+	if (!fontsLoaded) {
+		return <Text></Text>;
+	}
+
+	const dynamicStyle: TextStyle = {
+		fontSize,
+		fontFamily,
+		color,
+		...style,
+	};
+
+	return (
+		<Text style={[{ fontFamily: "Rubik_300Light" }, dynamicStyle]}>
+			{children}
+		</Text>
+	);
 };
 
-const styles = StyleSheet.create({
-	textStyle: {
-		color: "#fff",
-	},
-});
-
-export default Text;
+export default AppText;
