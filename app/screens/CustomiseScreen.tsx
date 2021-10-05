@@ -1,10 +1,11 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useRef, useState, LegacyRef } from "react";
 import {
 	StyleSheet,
 	Dimensions,
 	View,
 	TouchableWithoutFeedback,
 	Image,
+	Text,
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
@@ -12,6 +13,9 @@ import { AntDesign } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { SvgXml } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
+import { Camera, CameraCapturedPicture } from "expo-camera";
+import BottomSheet from "reanimated-bottom-sheet";
+import BottomSheetBehavior from "reanimated-bottom-sheet/lib/typescript";
 
 import { AppNavigatorParamList } from "../routes/AppNavigator";
 import Screen from "../components/Screen";
@@ -24,6 +28,13 @@ import { RoundedGradient } from "../svgs/svgList";
 import { ImageInfo } from "expo-image-picker/build/ImagePicker.types";
 import DynamicTextWrapper from "../components/DynamicTextWrapper";
 import DynamicImageWrapper from "../components/DynamicImageWrapper";
+import { backgroundsList, stickersList } from "../constants";
+import AppCamera from "../components/AppCamera";
+import Draw from "../components/Draw";
+import { PathType, Sticker } from "../types";
+import PathsCanvas from "../components/PathsCanvas";
+import StickersTray from "../components/StickersTray";
+import DynamicStickerWrapper from "../components/DynamicStickerWrapper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -33,14 +44,28 @@ interface CustomiseScreenProps {
 }
 
 const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
-	const { occasion, image, cardBackground } = route.params;
+	const {
+		image,
+		cardBackground,
+		showCurvedGradient,
+		verticalPosition,
+		box,
+		height: imageHeight,
+	} = route.params;
 	const [strings, setStrings] = useState<stringInterface[]>([]);
-	const [imageUris, setImageUris] = useState<ImageInfo[]>([]);
+	const [imageUris, setImageUris] = useState<
+		ImageInfo[] | CameraCapturedPicture[]
+	>([]);
 	const [selectedString, setSelectedString] = useState<stringInterface>();
 	const [activeTool, setActiveTool] = useState<
-		"main" | "text" | "image" | "photo" | "emoji"
+		"main" | "text" | "image" | "camera" | "emoji" | "draw"
 	>("main");
+	const [paths, setPaths] = useState<PathType[]>([]);
+	const [snapPoint, setSnapPoint] = useState<0 | 2>(2);
+	const [stickers, setStickers] = useState<Sticker[]>([]);
+
 	const gradient = RoundedGradient(cardBackground);
+	const sheetRef = useRef<BottomSheetBehavior>(null);
 
 	const handleAddText = () => {
 		setActiveTool("text");
@@ -75,95 +100,177 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 		}
 	};
 
-	const selectImage = async () => {
-		try {
-			const result = await ImagePicker.launchImageLibraryAsync();
-			if (!result.cancelled) {
-				setImageUris([...imageUris, result]);
-			}
-		} catch (error) {
-			console.log("Error reading an image");
+	const requestCameraPermission = async () => {
+		const { status } = await Camera.requestPermissionsAsync();
+		if (status !== "granted") {
+			alert("You need to enable permissions to take photos");
 		}
+	};
+
+	const handleUsePhoto = (photo: CameraCapturedPicture) => {
+		setImageUris([...imageUris, photo]);
+		setActiveTool("main");
 	};
 
 	useEffect(() => {
 		requestGalleryPermission();
+		requestCameraPermission();
 	}, []);
 
+	useEffect(() => {
+		sheetRef.current?.snapTo(snapPoint);
+	}, [snapPoint]);
+
 	return (
-		<Screen style={styles.container}>
-			{activeTool === "main" && (
+		<>
+			<Screen style={styles.container}>
 				<View style={styles.toolsWrapper}>
-					<Header>
-						<>
-							<TouchableWithoutFeedback
-								onPress={() =>
-									navigation.navigate(
-										"BackgroundSelectionScreen",
-										{
-											occasion,
+					{/main|emoji/.test(activeTool) && (
+						<Header>
+							<>
+								<TouchableWithoutFeedback
+									onPress={() =>
+										navigation.navigate(
+											"BackgroundSelectionScreen"
+										)
+									}
+								>
+									<AntDesign
+										name="closecircle"
+										size={24}
+										color={colors.yellow}
+									/>
+								</TouchableWithoutFeedback>
+
+								<View style={styles.toolbar}>
+									<MainToolbar
+										onCreateNewText={handleAddText}
+										onSelectImage={(image) =>
+											setImageUris([...imageUris, image])
 										}
-									)
-								}
-							>
-								<AntDesign
-									name="closecircle"
-									size={24}
-									color={colors.yellow}
-								/>
-							</TouchableWithoutFeedback>
-
-							<View style={styles.toolbar}>
-								<MainToolbar
-									onCreateNewText={handleAddText}
-									onSelectImage={selectImage}
-								/>
-							</View>
-						</>
-					</Header>
+										onSelectTool={(tool) => {
+											setActiveTool(tool);
+											if (tool == "emoji") {
+												setSnapPoint(
+													snapPoint === 2 ? 0 : 2
+												);
+											}
+										}}
+									/>
+								</View>
+							</>
+						</Header>
+					)}
 				</View>
-			)}
 
-			<View style={styles.toolsWrapper}>
-				{activeTool === "text" && (
-					<TextTool
-						onCreateText={handleCreateText}
-						onUpdateText={handleUpdateText}
-						selectedText={selectedString}
+				<View style={styles.toolsWrapper}>
+					{activeTool === "text" && (
+						<TextTool
+							onCreateText={handleCreateText}
+							onUpdateText={handleUpdateText}
+							selectedText={selectedString}
+						/>
+					)}
+				</View>
+
+				{/* Begin Final Image */}
+				<View
+					style={[
+						styles.imageContainer,
+						{
+							backgroundColor: cardBackground,
+							justifyContent: verticalPosition,
+						},
+					]}
+				>
+					<Image
+						source={
+							backgroundsList.find((i) => i.key === image)?.image!
+						}
+						style={[
+							{
+								width,
+								height: box
+									? width
+									: imageHeight
+									? imageHeight
+									: "100%",
+							},
+						]}
+					/>
+
+					{showCurvedGradient && (
+						<SvgXml
+							xml={gradient}
+							width={width}
+							height={width * 0.178}
+							style={styles.roundedGradient}
+						/>
+					)}
+
+					{strings.map((s) => (
+						<DynamicTextWrapper
+							key={s.id}
+							text={s}
+							onPress={() => handleToggleTextTool(s)}
+						/>
+					))}
+
+					{imageUris.map((image) => (
+						<DynamicImageWrapper key={image.uri} image={image} />
+					))}
+
+					{paths.length > 0 && activeTool === "main" && (
+						<PathsCanvas
+							height={height}
+							width={width}
+							paths={paths}
+						/>
+					)}
+
+					{stickers.map((sticker: Sticker) => (
+						<DynamicStickerWrapper
+							sticker={sticker}
+							key={sticker.key}
+						/>
+					))}
+				</View>
+				{/* End Final Image */}
+
+				{activeTool === "camera" && (
+					<AppCamera
+						onUsePhoto={(photo) => handleUsePhoto(photo)}
+						onCloseCamera={() => setActiveTool("main")}
 					/>
 				)}
-			</View>
 
-			{/* Begin Final Image */}
-			<View
-				style={[
-					styles.imageContainer,
-					{ backgroundColor: cardBackground },
-				]}
-			>
-				{image}
-
-				<SvgXml
-					xml={gradient}
-					width={width}
-					height={width * 0.178}
-					style={styles.roundedGradient}
-				/>
-
-				{strings.map((s) => (
-					<DynamicTextWrapper
-						key={s.id}
-						text={s}
-						onPress={() => handleToggleTextTool(s)}
+				{activeTool === "draw" && (
+					<Draw
+						onConfirmPaths={(paths) => {
+							setPaths(paths);
+							setActiveTool("main");
+						}}
+						initialValues={{ paths }}
 					/>
-				))}
-
-				{imageUris.map((image) => (
-					<DynamicImageWrapper image={image} />
-				))}
-			</View>
-			{/* End Final Image */}
-		</Screen>
+				)}
+			</Screen>
+			<BottomSheet
+				ref={sheetRef}
+				snapPoints={[450, 300, 0]}
+				borderRadius={10}
+				renderContent={() => (
+					<StickersTray
+						onSelectSticker={(sticker) => {
+							setStickers([...stickers, sticker]);
+							setSnapPoint(2);
+						}}
+					/>
+				)}
+				enabledContentTapInteraction={false}
+				initialSnap={snapPoint}
+				onCloseEnd={() => setSnapPoint(2)}
+			/>
+		</>
 	);
 };
 
@@ -193,7 +300,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#fff",
 		position: "relative",
-		marginTop: 50,
 	},
 	toolsWrapper: {
 		position: "absolute",
@@ -201,6 +307,7 @@ const styles = StyleSheet.create({
 		zIndex: 3,
 		flex: 1,
 		width,
+		backgroundColor: "rgba(0,0,0,0.4)",
 	},
 	roundedGradient: {
 		position: "absolute",
@@ -208,6 +315,23 @@ const styles = StyleSheet.create({
 		zIndex: 3,
 		left: 0,
 		right: 0,
+	},
+	verticalCentre: {
+		position: "absolute",
+		width: 2,
+		height,
+		backgroundColor: "#333",
+		left: width / 2 - 1,
+		zIndex: 1002,
+		top: Constants.statusBarHeight,
+	},
+	horizontalCentre: {
+		position: "absolute",
+		width,
+		height: 2,
+		backgroundColor: "#333",
+		top: Constants.statusBarHeight + height / 2,
+		zIndex: 1002,
 	},
 });
 

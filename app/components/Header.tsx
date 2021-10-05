@@ -1,12 +1,13 @@
-import React, { FC } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { FC, ReactElement } from "react";
+import { StyleSheet, View, ViewStyle } from "react-native";
 
 export interface HeaderProps {
-	children: JSX.Element;
+	children?: ReactElement;
+	customStyle?: ViewStyle;
 }
 
-const Header: FC<HeaderProps> = ({ children }) => {
-	return <View style={styles.header}>{children}</View>;
+const Header: FC<HeaderProps> = ({ children, customStyle = {} }) => {
+	return <View style={[styles.header, customStyle]}>{children}</View>;
 };
 
 const styles = StyleSheet.create({

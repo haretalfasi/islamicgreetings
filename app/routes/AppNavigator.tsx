@@ -1,22 +1,26 @@
-import React, { FC } from "react";
+import React, { FC, ReactElement } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import SplashScreen from "../screens/SplashScreen";
 import OnBoarderScreen from "../screens/OnBoarderScreen";
-import MainScreen from "../screens/MainScreen";
 import BackgroundSelectionScreen from "../screens/BackgroundSelectionScreen";
 import CustomiseScreen from "../screens/CustomiseScreen";
+import Draw from "../components/Draw";
 
 export type AppNavigatorParamList = {
 	SplashScreen: { viewedOnboarder: boolean };
 	OnBoarderScreen: undefined;
 	MainScreen: undefined;
-	BackgroundSelectionScreen: { occasion: string };
+	BackgroundSelectionScreen: undefined;
 	CustomiseScreen: {
-		occasion: string;
-		image: JSX.Element;
-		cardBackground: string;
+		image: string;
+		cardBackground?: string;
+		showCurvedGradient: boolean;
+		verticalPosition: "flex-start" | "flex-end" | "center";
+		box?: boolean;
+		height?: string;
 	};
 	PlayScreen: undefined;
+	DrawScreen: undefined;
 };
 
 const Stack = createStackNavigator<AppNavigatorParamList>();
@@ -29,7 +33,7 @@ const AppNavigator: FC<AppNavigatorProps> = ({ viewedOnboarder }) => {
 	return (
 		<Stack.Navigator
 			headerMode="none"
-			initialRouteName="MainScreen"
+			initialRouteName="BackgroundSelectionScreen"
 			detachInactiveScreens={false}
 		>
 			<Stack.Screen
@@ -38,12 +42,12 @@ const AppNavigator: FC<AppNavigatorProps> = ({ viewedOnboarder }) => {
 				initialParams={{ viewedOnboarder }}
 			/>
 			<Stack.Screen name="OnBoarderScreen" component={OnBoarderScreen} />
-			<Stack.Screen name="MainScreen" component={MainScreen} />
 			<Stack.Screen
 				name="BackgroundSelectionScreen"
 				component={BackgroundSelectionScreen}
 			/>
 			<Stack.Screen name="CustomiseScreen" component={CustomiseScreen} />
+			<Stack.Screen name="DrawScreen" component={Draw} />
 		</Stack.Navigator>
 	);
 };

@@ -15,7 +15,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 
-export interface DynamicTextWrapperProps {
+export interface DynamicImageWrapperProps {
 	image: ImageInfo;
 }
 
@@ -28,22 +28,26 @@ type eventContext = {
 
 const { width: BASE_WIDTH, height: BASE_HEIGHT } = Dimensions.get("window");
 
-const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ image }) => {
+const DynamicImageWrapper: FC<DynamicImageWrapperProps> = ({ image }) => {
 	const panRef = useRef();
 	const rotationRef = useRef();
 	const scaleRef = useRef();
 
+	const baseImageWidth = image.width / 12;
+	const baseImageHeight = image.height / 12;
+
+	console.log({ width: image.width, height: image.height });
+
 	const translateX = useSharedValue(0);
 	const translateY = useSharedValue(0);
 	const rotation = useSharedValue(0);
-	const scale = useSharedValue(42);
+	const scale = useSharedValue(1);
 
 	const handlePanGesture = useAnimatedGestureHandler<
 		PanGestureHandlerGestureEvent,
 		eventContext
 	>({
 		onStart: (event, context) => {
-			console.log("Panning");
 			context.translateX = translateX.value;
 			context.translateY = translateY.value;
 		},
@@ -73,28 +77,29 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ image }) => {
 			context.scale = scale.value;
 		},
 		onActive: (event, context) => {
+			console.log(event.scale);
 			scale.value = context.scale * event.scale;
 		},
 	});
 
 	const animatedStyle = useAnimatedStyle(() => {
-		const width = scale.value + 200;
-
 		return {
 			transform: [
 				{ translateX: translateX.value },
 				{ translateY: translateY.value },
 				{ rotate: `${rotation.value * (180 / Math.PI)}deg` },
 			],
-			width,
-			height: width,
+			width: scale.value * baseImageWidth,
+			height: scale.value * baseImageHeight,
 		};
 	});
 
 	const animatedImageStyle = useAnimatedStyle(() => {
+		const imageWidth = scale.value * baseImageWidth;
+		const imageHeight = scale.value * baseImageHeight;
 		return {
-			width: scale.value + 200,
-			height: scale.value + 200,
+			width: imageWidth,
+			height: imageHeight,
 		};
 	});
 
@@ -104,7 +109,16 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ image }) => {
 			ref={panRef}
 			simultaneousHandlers={[rotationRef, scaleRef]}
 		>
-			<Animated.View style={[styles.imageWrapper, animatedStyle]}>
+			<Animated.View
+				style={[
+					styles.imageWrapper,
+					animatedStyle,
+					{
+						width: baseImageWidth,
+						height: baseImageHeight,
+					},
+				]}
+			>
 				<RotationGestureHandler
 					onGestureEvent={handleRotationGesture}
 					ref={rotationRef}
@@ -118,7 +132,13 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ image }) => {
 						>
 							<Animated.Image
 								source={{ uri: image.uri }}
-								style={animatedImageStyle}
+								style={[
+									animatedImageStyle,
+									{
+										width: baseImageWidth,
+										height: baseImageHeight,
+									},
+								]}
 							/>
 						</PinchGestureHandler>
 					</Animated.View>
@@ -136,9 +156,6 @@ const styles = StyleSheet.create({
 		top: BASE_HEIGHT / 2,
 		backgroundColor: "red",
 	},
-	image: {
-		flex: 1,
-	},
 });
 
-export default DynamicTextWrapper;
+export default DynamicImageWrapper;

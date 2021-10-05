@@ -9,7 +9,7 @@ import {
 	GestureResponderEvent,
 } from "react-native";
 import { getRandomBytes } from "expo-random";
-import { Rubik_700Bold } from "@expo-google-fonts/rubik";
+import { Rubik_300Light, Rubik_700Bold } from "@expo-google-fonts/rubik";
 import { useFonts, Arizonia_400Regular } from "@expo-google-fonts/arizonia";
 import { Courgette_400Regular } from "@expo-google-fonts/courgette";
 import { GloriaHallelujah_400Regular } from "@expo-google-fonts/gloria-hallelujah";
@@ -22,6 +22,9 @@ import Text from "./Text";
 import Header from "./Header";
 import { FlatList } from "react-native-gesture-handler";
 import { ColourWheel } from "../svgs/svgList";
+import { colorsList } from "../constants";
+import ColorPicker from "./ColorPicker";
+import FontPicker from "./FontPicker";
 
 const { width, height } = Dimensions.get("window");
 
@@ -41,186 +44,6 @@ export interface TextToolProps {
 	selectedText?: stringInterface;
 }
 
-interface FontItem {
-	id: number;
-	font: string;
-}
-
-const fontsList = [
-	{
-		id: 1,
-		font: "Arizonia_400Regular",
-	},
-	{
-		id: 2,
-		font: "Rubik_700Bold",
-	},
-	{
-		id: 3,
-		font: "Courgette_400Regular",
-	},
-	{
-		id: 4,
-		font: "GloriaHallelujah_400Regular",
-	},
-	{
-		id: 5,
-		font: "Oswald_500Medium",
-	},
-];
-
-interface ColorItem {
-	id: number;
-	hex: string;
-}
-
-const colorsList = [
-	{
-		id: 1,
-		hex: "#FFFFFF",
-	},
-	{
-		id: 2,
-		hex: "#000000",
-	},
-	{
-		id: 3,
-		hex: "#301000",
-	},
-	{
-		id: 4,
-		hex: "#2870B8",
-	},
-	{
-		id: 5,
-		hex: "#3091C8",
-	},
-	{
-		id: 6,
-		hex: "#90C767",
-	},
-	{
-		id: 7,
-		hex: "#011F2F",
-	},
-	{
-		id: 8,
-		hex: "#B86F27",
-	},
-	{
-		id: 9,
-		hex: "#C96730",
-	},
-	{
-		id: 10,
-		hex: "#FFFFFF",
-	},
-	{
-		id: 11,
-		hex: "#000000",
-	},
-	{
-		id: 12,
-		hex: "#3797F1",
-	},
-	{
-		id: 13,
-		hex: "#6FC04E",
-	},
-	{
-		id: 14,
-		hex: "#FDCB5A",
-	},
-	{
-		id: 15,
-		hex: "#FD8D32",
-	},
-	{
-		id: 16,
-		hex: "#EE4A56",
-	},
-	{
-		id: 17,
-		hex: "#D1096A",
-	},
-	{
-		id: 18,
-		hex: "#A206BA",
-	},
-	{
-		id: 19,
-		hex: "#ED0114",
-	},
-	{
-		id: 20,
-		hex: "#ED858E",
-	},
-	{
-		id: 21,
-		hex: "#FFD2D3",
-	},
-	{
-		id: 22,
-		hex: "#FEDBB2",
-	},
-	{
-		id: 23,
-		hex: "#FFC481",
-	},
-	{
-		id: 24,
-		hex: "#D28F46",
-	},
-	{
-		id: 25,
-		hex: "#9A6439",
-	},
-	{
-		id: 26,
-		hex: "#442324",
-	},
-	{
-		id: 27,
-		hex: "#1B4A28",
-	},
-	{
-		id: 28,
-		hex: "#262626",
-	},
-	{
-		id: 29,
-		hex: "#363636",
-	},
-	{
-		id: 30,
-		hex: "#555555",
-	},
-	{
-		id: 31,
-		hex: "#737373",
-	},
-	{
-		id: 32,
-		hex: "#999999",
-	},
-	{
-		id: 33,
-		hex: "#B2B2B2",
-	},
-	{
-		id: 34,
-		hex: "#C7C7C7",
-	},
-	{
-		id: 35,
-		hex: "#DBDBDB",
-	},
-	{
-		id: 36,
-		hex: "#EFEFEF",
-	},
-];
-
 const TextTool: FC<TextToolProps> = ({
 	onUpdateText,
 	onCreateText,
@@ -228,6 +51,7 @@ const TextTool: FC<TextToolProps> = ({
 }) => {
 	// Fonts
 	let [fontsLoaded] = useFonts({
+		Rubik_300Light,
 		Rubik_700Bold,
 		Arizonia_400Regular,
 		Courgette_400Regular,
@@ -386,65 +210,15 @@ const TextTool: FC<TextToolProps> = ({
 			</View>
 			<View style={[styles.fontsToolbar, { top: fontsToolbarHeight }]}>
 				{fontOrColor === "font" && (
-					<FlatList
-						contentContainerStyle={{
-							alignItems: "center",
-						}}
-						horizontal
-						scrollEnabled
-						data={fontsList}
-						keyExtractor={(item) => item.id}
-						keyboardShouldPersistTaps="always"
-						renderItem={({ item }) => (
-							<TouchableWithoutFeedback
-								onPress={() => setSelectedFont(item.font)}
-							>
-								<View style={styles.fontOption}>
-									<Text
-										style={{
-											fontFamily: item.font,
-											color:
-												selectedFont === item.font
-													? "orange"
-													: "#fff",
-										}}
-										fontSize={18}
-									>
-										Aa
-									</Text>
-								</View>
-							</TouchableWithoutFeedback>
-						)}
+					<FontPicker
+						onSetSelectedFont={(font) => setSelectedFont(font)}
+						selectedFont={selectedFont}
 					/>
 				)}
 
 				{fontOrColor === "color" && (
-					<FlatList
-						contentContainerStyle={{
-							alignItems: "center",
-						}}
-						horizontal
-						scrollEnabled
-						data={colorsList}
-						keyExtractor={(item) => item.id}
-						keyboardShouldPersistTaps="always"
-						renderItem={({ item }) => (
-							<TouchableWithoutFeedback
-								onPress={() => setSelectedColor(item.hex)}
-							>
-								<View
-									style={{
-										width: 24,
-										height: 24,
-										borderRadius: 12,
-										backgroundColor: item.hex,
-										borderWidth: 1,
-										borderColor: "#fff",
-										marginHorizontal: 8,
-									}}
-								/>
-							</TouchableWithoutFeedback>
-						)}
+					<ColorPicker
+						onSetSelectedColor={(color) => setSelectedColor(color)}
 					/>
 				)}
 			</View>
@@ -455,7 +229,7 @@ const TextTool: FC<TextToolProps> = ({
 const styles = StyleSheet.create({
 	overlay: {
 		backgroundColor: "#111",
-		opacity: 0.8,
+		opacity: 0.5,
 		width,
 	},
 	textInput: {
@@ -498,16 +272,6 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
-	},
-	fontOption: {
-		width: 50,
-		height: 50,
-		backgroundColor: "rgba(0,0,0,0.35)",
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		borderRadius: 25,
-		marginHorizontal: 8,
 	},
 	fontColorWheel: {
 		borderRadius: 14,

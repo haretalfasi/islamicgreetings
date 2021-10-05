@@ -67,9 +67,7 @@ const MainScreen: FC<MainScreenProps> = ({ navigation }) => {
 					<OccasionItem
 						item={item}
 						onPress={() =>
-							navigation.navigate("BackgroundSelectionScreen", {
-								occasion: item.title,
-							})
+							navigation.navigate("BackgroundSelectionScreen")
 						}
 					/>
 				)}

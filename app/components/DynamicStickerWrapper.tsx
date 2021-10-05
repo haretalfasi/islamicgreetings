@@ -1,3 +1,4 @@
+import { ImageInfo } from "expo-image-picker/build/ImagePicker.types";
 import React, { FC, useRef } from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import {
@@ -13,16 +14,11 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { Rubik_300Light, Rubik_700Bold } from "@expo-google-fonts/rubik";
-import { useFonts, Arizonia_400Regular } from "@expo-google-fonts/arizonia";
-import { Courgette_400Regular } from "@expo-google-fonts/courgette";
-import { GloriaHallelujah_400Regular } from "@expo-google-fonts/gloria-hallelujah";
-import { Oswald_500Medium } from "@expo-google-fonts/oswald";
-import { stringInterface } from "../components/TextTool";
+import { SvgXml, XmlProps } from "react-native-svg";
+import { Sticker } from "../types";
 
-export interface DynamicTextWrapperProps {
-	text: stringInterface;
-	onPress: () => void;
+export interface DynamicStickerWrapperProps {
+	sticker: Sticker;
 }
 
 type eventContext = {
@@ -32,27 +28,28 @@ type eventContext = {
 	scale: number;
 };
 
+class SvgComponent extends React.Component<XmlProps> {
+	render() {
+		return <SvgXml {...this.props} />;
+	}
+}
+
+const ReanimatedSvgComponent = Animated.createAnimatedComponent(SvgComponent);
+
 const { width: BASE_WIDTH, height: BASE_HEIGHT } = Dimensions.get("window");
 
-const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ text, onPress }) => {
-	// Fonts
-	let [fontsLoaded] = useFonts({
-		Rubik_300Light,
-		Rubik_700Bold,
-		Arizonia_400Regular,
-		Courgette_400Regular,
-		GloriaHallelujah_400Regular,
-		Oswald_500Medium,
-	});
-
+const DynamicStickerWrapper: FC<DynamicStickerWrapperProps> = ({ sticker }) => {
 	const panRef = useRef();
 	const rotationRef = useRef();
 	const scaleRef = useRef();
 
+	const baseImageWidth = 100;
+	const baseImageHeight = 100;
+
 	const translateX = useSharedValue(0);
 	const translateY = useSharedValue(0);
 	const rotation = useSharedValue(0);
-	const scale = useSharedValue(42);
+	const scale = useSharedValue(1);
 
 	const handlePanGesture = useAnimatedGestureHandler<
 		PanGestureHandlerGestureEvent,
@@ -65,11 +62,6 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ text, onPress }) => {
 		onActive: (event, context) => {
 			translateX.value = context.translateX + event.translationX;
 			translateY.value = context.translateY + event.translationY;
-
-			console.log({
-				eventTranslateX: event.translationX,
-				eventTranslateY: event.translationY,
-			});
 		},
 	});
 
@@ -93,28 +85,29 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ text, onPress }) => {
 			context.scale = scale.value;
 		},
 		onActive: (event, context) => {
+			console.log(event.scale);
 			scale.value = context.scale * event.scale;
 		},
 	});
 
 	const animatedStyle = useAnimatedStyle(() => {
-		const width = BASE_WIDTH + scale.value + 500;
-
 		return {
 			transform: [
 				{ translateX: translateX.value },
 				{ translateY: translateY.value },
 				{ rotate: `${rotation.value * (180 / Math.PI)}deg` },
 			],
-			width,
+			width: scale.value * baseImageWidth,
+			height: scale.value * baseImageHeight,
 		};
 	});
 
-	const animatedFontStyle = useAnimatedStyle(() => ({
-		fontSize: scale.value,
-	}));
-
-	if (!fontsLoaded) return null;
+	const animatedImageStyle = useAnimatedStyle(() => {
+		return {
+			width: scale.value * baseImageWidth,
+			height: scale.value * baseImageHeight,
+		};
+	});
 
 	return (
 		<PanGestureHandler
@@ -122,7 +115,16 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ text, onPress }) => {
 			ref={panRef}
 			simultaneousHandlers={[rotationRef, scaleRef]}
 		>
-			<Animated.View style={[styles.stringWrapper, animatedStyle]}>
+			<Animated.View
+				style={[
+					styles.imageWrapper,
+					animatedStyle,
+					{
+						width: baseImageWidth,
+						height: baseImageHeight,
+					},
+				]}
+			>
 				<RotationGestureHandler
 					onGestureEvent={handleRotationGesture}
 					ref={rotationRef}
@@ -134,21 +136,18 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ text, onPress }) => {
 							ref={scaleRef}
 							simultaneousHandlers={[rotationRef, panRef]}
 						>
-							<Animated.Text
+							<ReanimatedSvgComponent
+								xml={sticker.svg}
+								width={scale.value * baseImageWidth}
+								height={scale.value * baseImageHeight}
 								style={[
-									styles.string,
-									animatedFontStyle,
+									animatedImageStyle,
 									{
-										fontFamily: text.fontFamily,
-										textAlign: text.textAlign,
-										color: text.color,
+										width: baseImageWidth,
+										height: baseImageHeight,
 									},
-									text.color === "#FFFFFF" && styles.shadow,
 								]}
-								onPress={onPress}
-							>
-								{text.text}
-							</Animated.Text>
+							/>
 						</PinchGestureHandler>
 					</Animated.View>
 				</RotationGestureHandler>
@@ -158,21 +157,12 @@ const DynamicTextWrapper: FC<DynamicTextWrapperProps> = ({ text, onPress }) => {
 };
 
 const styles = StyleSheet.create({
-	stringWrapper: {
-		zIndex: 301,
-		alignSelf: "flex-start",
+	imageWrapper: {
+		zIndex: 299,
 		position: "absolute",
-		left: -250,
+		left: 0,
 		top: BASE_HEIGHT / 2,
-	},
-	string: {
-		fontSize: 42,
-	},
-	shadow: {
-		textShadowColor: "rgba(0,0,0,0.3)",
-		textShadowOffset: { width: -1, height: 1 },
-		textShadowRadius: 10,
 	},
 });
 
-export default DynamicTextWrapper;
+export default DynamicStickerWrapper;

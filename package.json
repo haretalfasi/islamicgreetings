@@ -13,12 +13,16 @@
     "@expo-google-fonts/gloria-hallelujah": "^0.2.0",
     "@expo-google-fonts/oswald": "^0.2.0",
     "@expo-google-fonts/rubik": "^0.1.0",
+    "@luncheon/simplify-svg-path": "^0.1.4",
     "@react-native-async-storage/async-storage": "^1.13.0",
     "@react-native-community/masked-view": "0.1.10",
+    "@react-native-community/slider": "^4.1.7",
     "@react-navigation/native": "^5.9.4",
     "@react-navigation/stack": "^5.14.4",
     "expo": "^41.0.0",
     "expo-ads-admob": "~10.0.4",
+    "expo-blur": "~9.0.3",
+    "expo-camera": "~11.0.2",
     "expo-font": "~9.1.0",
     "expo-image-picker": "~10.1.4",
     "expo-linear-gradient": "~9.1.0",
@@ -33,7 +37,8 @@
     "react-native-safe-area-context": "3.2.0",
     "react-native-screens": "~3.0.0",
     "react-native-svg": "12.1.0",
-    "react-native-web": "~0.13.12"
+    "react-native-web": "~0.13.12",
+    "reanimated-bottom-sheet": "^1.0.0-alpha.22"
   },
   "devDependencies": {
     "@babel/core": "~7.9.0",

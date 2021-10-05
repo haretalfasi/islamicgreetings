@@ -4,70 +4,24 @@ import {
 	Dimensions,
 	View,
 	TouchableWithoutFeedback,
-	ImageSourcePropType,
 	Image,
 	FlatList,
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
 import { AdMobBanner } from "expo-ads-admob";
-import { AntDesign } from "@expo/vector-icons";
+import { SvgXml } from "react-native-svg";
 
 import { AppNavigatorParamList } from "../routes/AppNavigator";
 import Screen from "../components/Screen";
-import Text from "../components/Text";
 import { colors } from "../config/theme";
-
-export interface occasion {
-	key: string;
-	image: ImageSourcePropType;
-	backgroundColor: string;
-}
-
-export interface backgroundList {
-	[key: string]: occasion[];
-}
+import { appLogo } from "../svgs/svgList";
+import { backgroundsList } from "../constants";
 
 const { width, height } = Dimensions.get("window");
-
-const backgroundsList: backgroundList = {
-	ramadan: [
-		{
-			key: "ramadan-1",
-			image: require("../assets/backgrounds/ramadan/ramadan-1.jpg"),
-			backgroundColor: "#043C3F",
-		},
-		{
-			key: "ramadan-2",
-			image: require("../assets/backgrounds/ramadan/ramadan-2.jpg"),
-			backgroundColor: "#ffffff",
-		},
-	],
-	eid: [
-		{
-			key: "eid-1",
-			image: require("../assets/backgrounds/eid/eid-1.jpg"),
-			backgroundColor: "#CBD2D0",
-		},
-		{
-			key: "eid-2",
-			image: require("../assets/backgrounds/eid/eid-2.jpg"),
-			backgroundColor: "#744704",
-		},
-	],
-	wedding: [
-		{
-			key: "wedding-1",
-			image: require("../assets/backgrounds/wedding/wedding-1.jpg"),
-			backgroundColor: "#CBD2D0",
-		},
-		{
-			key: "wedding-2",
-			image: require("../assets/backgrounds/wedding/wedding-2.jpg"),
-			backgroundColor: "#744704",
-		},
-	],
-};
+const ratio = 226 / 55;
+const LOGO_WIDTH = width * 0.72;
+const LOGO_HEIGHT = LOGO_WIDTH / ratio;
 
 interface BackgroundSelectionScreenProps {
 	navigation: StackNavigationProp<
@@ -79,48 +33,32 @@ interface BackgroundSelectionScreenProps {
 
 const BackgroundSelectionScreen: FC<BackgroundSelectionScreenProps> = ({
 	navigation,
-	route,
 }) => {
-	const { occasion } = route.params;
 	return (
 		<Screen style={styles.container}>
-			<View style={styles.header}>
-				<TouchableWithoutFeedback
-					onPress={() => navigation.navigate("MainScreen")}
-				>
-					<AntDesign
-						name="leftcircle"
-						size={24}
-						color={colors.yellow}
-					/>
-				</TouchableWithoutFeedback>
-				<Text
-					fontFamily="Rubik_700Bold"
-					fontSize={24}
-					style={styles.heading}
-				>
-					{occasion}
-				</Text>
-				<View />
+			<View style={styles.logo}>
+				<SvgXml xml={appLogo} width="100%" height="100%" />
 			</View>
 
 			<FlatList
-				data={backgroundsList[occasion.toLowerCase()]}
+				data={backgroundsList}
 				keyExtractor={(item) => item.key}
+				numColumns={3}
 				renderItem={({ item }) => {
 					return (
 						<View style={styles.backgroundWrapper}>
 							<TouchableWithoutFeedback
 								onPress={() =>
 									navigation.navigate("CustomiseScreen", {
-										occasion,
-										image: (
-											<Image
-												source={item.image}
-												style={{ width, height: width }}
-											/>
-										),
+										image: item.key,
 										cardBackground: item.backgroundColor,
+										showCurvedGradient:
+											item.showCurvedGradient || false,
+										verticalPosition:
+											item.verticalPosition ||
+											"flex-start",
+										box: item.box || false,
+										height: item.height,
 									})
 								}
 							>
@@ -150,6 +88,13 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		backgroundColor: colors.darkBlue,
 	},
+	logo: {
+		resizeMode: "contain",
+		width: LOGO_WIDTH,
+		height: LOGO_HEIGHT,
+		marginTop: 16,
+		marginBottom: 60,
+	},
 	adBanner: {
 		position: "absolute",
 		left: 0,
@@ -177,16 +122,22 @@ const styles = StyleSheet.create({
 	backgroundWrapper: {
 		width: width / 3,
 		height: width / 3,
+		overflow: "hidden",
 	},
 	thumbnail: {
 		resizeMode: "cover",
 		width: "100%",
-		height: "100%",
+		height: 200,
+		position: "relative",
 	},
 	listContainer: {
-		flexDirection: "row",
-		justifyContent: "flex-start",
-		width: width,
+		width,
+	},
+	positionTop: {
+		top: 0,
+	},
+	positionBottom: {
+		bottom: 0,
 	},
 });
 
