@@ -1,22 +1,28 @@
 import { ImageInfo } from "expo-image-picker/build/ImagePicker.types";
-import React, { FC, useRef } from "react";
-import { Dimensions, StyleSheet } from "react-native";
+import React, { FC, useCallback, useRef } from "react";
+import { Dimensions, StyleSheet, ViewStyle } from "react-native";
 import {
+	HandlerStateChangeEvent,
 	PanGestureHandler,
+	PanGestureHandlerEventPayload,
 	PanGestureHandlerGestureEvent,
 	PinchGestureHandler,
 	PinchGestureHandlerGestureEvent,
 	RotationGestureHandler,
 	RotationGestureHandlerGestureEvent,
+	State,
 } from "react-native-gesture-handler";
 import Animated, {
+	runOnJS,
 	useAnimatedGestureHandler,
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
+import { ImageInterface } from "../screens/CustomiseScreen";
 
 export interface DynamicImageWrapperProps {
-	image: ImageInfo;
+	image: ImageInterface;
+	onShowRemove: (value: boolean) => void;
 }
 
 type eventContext = {
@@ -28,7 +34,10 @@ type eventContext = {
 
 const { width: BASE_WIDTH, height: BASE_HEIGHT } = Dimensions.get("window");
 
-const DynamicImageWrapper: FC<DynamicImageWrapperProps> = ({ image }) => {
+const DynamicImageWrapper: FC<DynamicImageWrapperProps> = ({
+	image,
+	onShowRemove,
+}) => {
 	const panRef = useRef();
 	const rotationRef = useRef();
 	const scaleRef = useRef();
@@ -54,6 +63,12 @@ const DynamicImageWrapper: FC<DynamicImageWrapperProps> = ({ image }) => {
 		onActive: (event, context) => {
 			translateX.value = context.translateX + event.translationX;
 			translateY.value = context.translateY + event.translationY;
+
+			const percentageFromTop = (event.absoluteY / BASE_HEIGHT) * 100;
+			runOnJS(onShowRemove)(percentageFromTop > 75 ? true : false);
+		},
+		onEnd: () => {
+			runOnJS(onShowRemove)(false);
 		},
 	});
 
@@ -138,6 +153,7 @@ const DynamicImageWrapper: FC<DynamicImageWrapperProps> = ({ image }) => {
 										width: baseImageWidth,
 										height: baseImageHeight,
 									},
+									image.style && image.style,
 								]}
 							/>
 						</PinchGestureHandler>
@@ -153,8 +169,7 @@ const styles = StyleSheet.create({
 		zIndex: 299,
 		position: "absolute",
 		left: 0,
-		top: BASE_HEIGHT / 2,
-		backgroundColor: "red",
+		top: 0,
 	},
 });
 

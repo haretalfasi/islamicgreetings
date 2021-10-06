@@ -6,6 +6,8 @@ import {
 	TouchableWithoutFeedback,
 	Image,
 	Text,
+	ViewStyle,
+	TransformsStyle,
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
@@ -16,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera, CameraCapturedPicture } from "expo-camera";
 import BottomSheet from "reanimated-bottom-sheet";
 import BottomSheetBehavior from "reanimated-bottom-sheet/lib/typescript";
+import { MaterialIcons } from "@expo/vector-icons";
 
 import { AppNavigatorParamList } from "../routes/AppNavigator";
 import Screen from "../components/Screen";
@@ -35,12 +38,20 @@ import { PathType, Sticker } from "../types";
 import PathsCanvas from "../components/PathsCanvas";
 import StickersTray from "../components/StickersTray";
 import DynamicStickerWrapper from "../components/DynamicStickerWrapper";
+import Animated, {
+	useAnimatedStyle,
+	withTiming,
+} from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
 
 interface CustomiseScreenProps {
 	navigation: StackNavigationProp<AppNavigatorParamList, "CustomiseScreen">;
 	route: RouteProp<AppNavigatorParamList, "CustomiseScreen">;
+}
+
+export interface ImageInterface extends ImageInfo {
+	style?: TransformsStyle;
 }
 
 const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
@@ -53,9 +64,7 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 		height: imageHeight,
 	} = route.params;
 	const [strings, setStrings] = useState<stringInterface[]>([]);
-	const [imageUris, setImageUris] = useState<
-		ImageInfo[] | CameraCapturedPicture[]
-	>([]);
+	const [imageUris, setImageUris] = useState<ImageInterface[]>([]);
 	const [selectedString, setSelectedString] = useState<stringInterface>();
 	const [activeTool, setActiveTool] = useState<
 		"main" | "text" | "image" | "camera" | "emoji" | "draw"
@@ -63,6 +72,7 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 	const [paths, setPaths] = useState<PathType[]>([]);
 	const [snapPoint, setSnapPoint] = useState<0 | 2>(2);
 	const [stickers, setStickers] = useState<Sticker[]>([]);
+	const [showRemove, setShowRemove] = useState(false);
 
 	const gradient = RoundedGradient(cardBackground);
 	const sheetRef = useRef<BottomSheetBehavior>(null);
@@ -108,7 +118,10 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 	};
 
 	const handleUsePhoto = (photo: CameraCapturedPicture) => {
-		setImageUris([...imageUris, photo]);
+		setImageUris([
+			...imageUris,
+			{ ...photo, style: { transform: [{ rotateY: "180deg" }] } },
+		]);
 		setActiveTool("main");
 	};
 
@@ -120,6 +133,10 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 	useEffect(() => {
 		sheetRef.current?.snapTo(snapPoint);
 	}, [snapPoint]);
+
+	const animatedShowRemove = useAnimatedStyle(() => ({
+		opacity: withTiming(showRemove ? 1 : 0, { duration: 500 }),
+	}));
 
 	return (
 		<>
@@ -217,10 +234,14 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 					))}
 
 					{imageUris.map((image) => (
-						<DynamicImageWrapper key={image.uri} image={image} />
+						<DynamicImageWrapper
+							key={image.uri}
+							image={image}
+							onShowRemove={(value) => setShowRemove(value)}
+						/>
 					))}
 
-					{paths.length > 0 && activeTool === "main" && (
+					{paths.length > 0 && activeTool !== "draw" && (
 						<PathsCanvas
 							height={height}
 							width={width}
@@ -253,16 +274,31 @@ const CustomiseScreen: FC<CustomiseScreenProps> = ({ navigation, route }) => {
 						initialValues={{ paths }}
 					/>
 				)}
+
+				<Animated.View
+					style={[
+						{
+							position: "absolute",
+							bottom: 50,
+							left: width / 2 - 15,
+							zIndex: 9000,
+						},
+						animatedShowRemove,
+					]}
+				>
+					<MaterialIcons name="delete" size={40} color="white" />
+				</Animated.View>
 			</Screen>
 			<BottomSheet
 				ref={sheetRef}
-				snapPoints={[450, 300, 0]}
+				snapPoints={["86%", "50%", 0]}
 				borderRadius={10}
 				renderContent={() => (
 					<StickersTray
 						onSelectSticker={(sticker) => {
 							setStickers([...stickers, sticker]);
 							setSnapPoint(2);
+							setActiveTool("main");
 						}}
 					/>
 				)}

@@ -27,6 +27,7 @@ const ColorPicker = ({
 			]}
 			horizontal
 			scrollEnabled
+			showsHorizontalScrollIndicator={false}
 			data={colorsList}
 			keyExtractor={(item) => item.id}
 			keyboardShouldPersistTaps="always"

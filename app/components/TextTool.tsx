@@ -20,9 +20,7 @@ import { SvgXml } from "react-native-svg";
 import { useKeyboard } from "../hooks/useKeyboard";
 import Text from "./Text";
 import Header from "./Header";
-import { FlatList } from "react-native-gesture-handler";
 import { ColourWheel } from "../svgs/svgList";
-import { colorsList } from "../constants";
 import ColorPicker from "./ColorPicker";
 import FontPicker from "./FontPicker";
 
@@ -272,6 +270,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		right: 0,
+		justifyContent: "center",
 	},
 	fontColorWheel: {
 		borderRadius: 14,

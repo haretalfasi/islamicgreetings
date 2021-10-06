@@ -6,12 +6,15 @@ import {
 	StyleSheet,
 	Keyboard,
 	FlatList,
+	Dimensions,
 } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { stickersList } from "../constants";
 import { Sticker } from "../types";
 import { FontAwesome } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface StickerTrayProps {
 	onSelectSticker: (sticker: Sticker) => void;
@@ -43,11 +46,24 @@ const StickerTray = ({ onSelectSticker }: StickerTrayProps) => {
 			intensity={90}
 			tint="dark"
 			style={{
-				padding: 16,
+				paddingTop: 40,
+				paddingHorizontal: 16,
 				height: "100%",
 				width: "100%",
 			}}
 		>
+			<View
+				style={{
+					width: 40,
+					height: 8,
+					backgroundColor: "rgba(255,255,255,0.5)",
+					borderRadius: 4,
+					position: "absolute",
+					left: screenWidth / 2,
+					transform: [{ translateX: -20 }],
+					top: 16,
+				}}
+			/>
 			<View style={{ marginBottom: 24 }}>
 				<FontAwesome
 					name="search"
